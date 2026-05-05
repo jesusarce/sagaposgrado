@@ -13,6 +13,7 @@ import {
 } from "../../services/users.service";
 import type { User, CreateUserRequest, UpdateUserRequest } from "../../types/users/user.types";
 import { usePermissions } from "../../hooks/usePermissions";
+import Button from "../../components/ui/button/Button.tsx";
 
 export default function UsersListPage() {
   const { can } = usePermissions();
@@ -80,13 +81,13 @@ export default function UsersListPage() {
             Lista de Usuarios
           </h2>
           {can('users.create') && (
-            <button
-              onClick={handleCreate}
-              className="inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm bg-brand-500 text-white shadow-theme-xs hover:bg-brand-600"
-            >
-              <PlusIcon className="size-4" />
-              Nuevo Usuario
-            </button>
+              <Button
+                  size={"sm"}
+                  onClick={handleCreate}
+                  startIcon={<PlusIcon className="size-4 text-white" />}
+              >
+                Nuevo Usuario
+              </Button>
           )}
         </div>
 

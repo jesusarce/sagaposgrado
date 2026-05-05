@@ -4,6 +4,8 @@ import type { Role } from "../../types/roles/role.types";
 import { getRoles } from "../../services/roles.service";
 import Label from "../form/Label";
 import InputField from "../form/input/InputField";
+import Checkbox from "../form/input/Checkbox.tsx";
+import Button from "../ui/button/Button.tsx";
 
 interface UserFormProps {
   user?: User | null;
@@ -108,40 +110,43 @@ export default function UserForm({ user, onSubmit, onCancel }: UserFormProps) {
         <InputField type="password" value={passwordConfirmation} onChange={(e) => setPasswordConfirmation(e.target.value)} placeholder="••••••••" />
       </div>
       {allRoles.length > 0 && (
-        <div>
-          <Label>Roles</Label>
-          <div className="mt-1 flex flex-wrap gap-3">
-            {allRoles.map((role) => (
-              <label key={role.id} className="flex cursor-pointer items-center gap-1.5 text-sm text-gray-700 dark:text-gray-300">
-                <input
-                  type="checkbox"
-                  checked={selectedRoleIds.includes(role.id)}
-                  onChange={() => toggleRole(role.id)}
-                  className="rounded border-gray-300 text-brand-500 focus:ring-brand-500"
-                />
-                {role.name}
-              </label>
-            ))}
+          <div>
+            <Label>Roles</Label>
+
+            <div className="mt-2 flex flex-wrap gap-4">
+              {allRoles.map((role) => (
+                  <Checkbox
+                      key={role.id}
+                      label={role.name}
+                      checked={selectedRoleIds.includes(role.id)}
+                      onChange={() => toggleRole(role.id)}
+                      size="md"
+                  />
+              ))}
+            </div>
           </div>
-        </div>
       )}
       {error && <p className="text-sm text-error-500">{error}</p>}
       <div className="flex items-center justify-end gap-3 pt-2">
-        <button
-          type="button"
-          onClick={onCancel}
-          disabled={isSubmitting}
-          className="inline-flex items-center justify-center gap-2 rounded-lg px-5 py-3.5 text-sm bg-white text-gray-700 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-400 dark:ring-gray-700 dark:hover:bg-white/[0.03] disabled:cursor-not-allowed disabled:opacity-50"
+        <Button
+            type="button"
+            variant="outline"
+            onClick={onCancel}
+            disabled={isSubmitting}
         >
           Cancelar
-        </button>
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="inline-flex items-center justify-center gap-2 rounded-lg px-5 py-3.5 text-sm bg-brand-500 text-white shadow-theme-xs hover:bg-brand-600 disabled:bg-brand-300 disabled:cursor-not-allowed disabled:opacity-50"
+        </Button>
+
+        <Button
+            type="submit"
+            disabled={isSubmitting}
         >
-          {isSubmitting ? "Guardando..." : user ? "Actualizar" : "Crear"}
-        </button>
+          {isSubmitting
+              ? "Guardando..."
+              : user
+                  ? "Actualizar"
+                  : "Crear"}
+        </Button>
       </div>
     </form>
   );
