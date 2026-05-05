@@ -152,7 +152,7 @@ export default function UserTable({ users, isLoading, onEdit, onDelete }: UserTa
                   <td className="px-5 py-4 text-sm font-medium text-gray-800 dark:text-white/90">{user.name}</td>
                   <td className="px-5 py-4 text-sm text-gray-600 dark:text-gray-400">{user.email}</td>
                   <td className="px-5 py-4 text-sm text-gray-600 dark:text-gray-400">
-                    {user.roles?.join(", ") ?? "—"}
+                    {user.roles?.map(r => r.name).join(", ") ?? "—"}
                   </td>
                   {showActions && <td className="px-5 py-4">
                     <div className="flex items-center justify-end gap-2">

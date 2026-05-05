@@ -32,7 +32,7 @@ export default function UserForm({ user, onSubmit, onCancel }: UserFormProps) {
     setPasswordConfirmation("");
     setError(null);
     if (user?.roles && allRoles.length > 0) {
-      const matched = allRoles.filter((r) => user.roles!.includes(r.name)).map((r) => r.id);
+      const matched = allRoles.filter((r) => user.roles!.some(ur => ur.name === r.name)).map((r) => r.id);
       setSelectedRoleIds(matched);
     } else {
       setSelectedRoleIds([]);
