@@ -1,6 +1,6 @@
-import http from "./http.service";
-import { API_ENDPOINTS } from "../constants/api.constants";
-import { buildQueryParams } from "../utils/query.utils";
+import http from "../http.service.ts";
+import { API_ENDPOINTS } from "../../constants/api.constants.ts";
+import { buildQueryParams } from "../../utils/query.utils.ts";
 
 export interface PeriodoAcademico {
   id: string;

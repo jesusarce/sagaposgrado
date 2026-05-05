@@ -1,5 +1,5 @@
-import http from "./http.service";
-import { API_ENDPOINTS } from "../constants/api.constants";
+import http from "../http.service.ts";
+import { API_ENDPOINTS } from "../../constants/api.constants.ts";
 
 export interface NivelAcademico {
   id: string;

@@ -27,7 +27,7 @@ export interface PeriodoGestionRef {
 }
 
 export interface Curso {
-  id: string;
+  id: number;
   curso: string;
   id_especialidad: string;
   id_unidad_academica: string;
@@ -41,6 +41,29 @@ export interface Curso {
   unidad_academica?: UnidadAcademicaRef;
   periodo_gestion?: PeriodoGestionRef;
   periodo_academico?: PeriodoAcademicoRef;
+}
+
+export interface CreateCursoRequest {
+  curso: string;
+  idEspecialidad: number;
+  idUnidadAcademica: number;
+  periodo: number;
+  gestion: number;
+  idPeriodoGestion: number;
+  paralelo: string;
+  tipo: string;
+}
+
+export interface UpdateCursoRequest {
+  id: number;
+  curso?: string;
+  idEspecialidad?: number;
+  idUnidadAcademica?: number;
+  periodo?: number;
+  gestion?: number;
+  idPeriodoGestion?: number;
+  paralelo?: string;
+  tipo?: string;
 }
 
 export interface CursoServerFilters {

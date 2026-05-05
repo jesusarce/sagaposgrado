@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
-import { AngleUpIcon, AngleDownIcon } from "../../icons";
-import type { Curso, CursoServerFilters } from "../../types/saga/curso.types";
-import type { Pagination } from "../../types/common/api.types";
+import { AngleUpIcon, AngleDownIcon } from "../../../icons";
+import type { Curso, CursoServerFilters } from "../../../types/saga/curso.types.ts";
+import type { Pagination } from "../../../types/common/api.types.ts";
 
 interface CursoTableProps {
   cursos: Curso[];
@@ -53,7 +53,7 @@ const COLUMNS: {
   { label: "Especialidad",     sortField: "idEspecialidad",     filterKey: "especialidad",     placeholder: "Filtrar..." },
   { label: "Descripción",      filterKey: "descripcion",        placeholder: "Filtrar..." },
   { label: "Paralelo",         filterKey: "paralelo",           placeholder: "Filtrar..." },
-  { label: "Curso",            sortField: "Curso",              filterKey: "curso",            placeholder: "Buscar curso..." },
+  { label: "Curso",            sortField: "Curso",              filterKey: "curso",            placeholder: "Buscar cursos..." },
 ];
 
 export default function CursoTable({

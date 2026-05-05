@@ -1,0 +1,190 @@
+import { useState, useEffect, useCallback } from "react";
+import PageBreadCrumb from "../../../components/common/PageBreadCrumb.tsx";
+import PageMeta from "../../../components/common/PageMeta.tsx";
+import CursoTable from "../../../components/posgrado/cursos/CursoTable.tsx";
+import {createCurso, deleteCurso, getCursosPaginated, updateCurso} from "../../../services/postgrado/cursos.service.ts";
+import { getNivelAcadMap } from "../../../services/postgrado/nivel-academico.service.ts";
+import { getPeriodoDescMap } from "../../../services/postgrado/periodos-academicos.service.ts";
+import type {
+  CreateCursoRequest,
+  Curso,
+  CursoServerFilters,
+  UpdateCursoRequest
+} from "../../../types/saga/curso.types.ts";
+import type { Pagination } from "../../../types/common/api.types.ts";
+import Button from "../../../components/ui/button/Button.tsx";
+import {PlusIcon} from "../../../icons";
+import {usePermissions} from "../../../hooks/usePermissions.ts";
+import {Modal} from "../../../components/ui/modal";
+import UserForm from "../../../components/users/UserForm.tsx";
+import ModalDelete from "../../../components/modal/ModalDelete.tsx";
+import CursoForm from "../../../components/posgrado/cursos/CursoForm.tsx";
+
+export default function CursosListPage() {
+
+  const { can } = usePermissions();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selected, setSelected] = useState<Curso | null>(null);
+  const [confirmId, setConfirmId] = useState<number | null>(null);
+
+  const [cursos, setCursos] = useState<Curso[]>([]);
+  const [pagination, setPagination] = useState<Omit<Pagination<Curso>, "data"> | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [page, setPage] = useState(1);
+  const [perPage, setPerPage] = useState(50);
+  const [serverFilters, setServerFilters] = useState<CursoServerFilters>({});
+  const [sort, setSort] = useState<string[]>([]);
+  const [nivelAcadMap, setNivelAcadMap] = useState<Map<string, string>>(new Map());
+  const [periodoDescMap, setPeriodoDescMap] = useState<Map<string, string>>(new Map());
+
+  useEffect(() => {
+    getNivelAcadMap().then(setNivelAcadMap).catch(() => {});
+    getPeriodoDescMap().then(setPeriodoDescMap).catch(() => {});
+  }, []);
+
+  const fetchCursos = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const filter: Record<string, string> = {};
+      if (serverFilters.Curso)           filter["Curso"]           = serverFilters.Curso;
+      if (serverFilters.Gestion)         filter["Gestion"]         = serverFilters.Gestion;
+      if (serverFilters.Paralelo)        filter["Paralelo"]        = serverFilters.Paralelo;
+      if (serverFilters.UnidadAcademica) filter["UnidadAcademica"] = serverFilters.UnidadAcademica;
+      if (serverFilters.Especialidad)    filter["Especialidad"]    = serverFilters.Especialidad;
+      if (serverFilters.NivelAcademico)  filter["NivelAcademico"]  = serverFilters.NivelAcademico;
+      if (serverFilters.PeriodoAcademico) filter["PeriodoAcademico"] = serverFilters.PeriodoAcademico;
+
+      const result = await getCursosPaginated({
+        page,
+        perPage,
+        ...(sort.length ? { sort } : {}),
+        ...(Object.keys(filter).length ? { filter } : {}),
+      });
+
+      const { data, ...meta } = result;
+      setCursos(data);
+      setPagination(meta);
+    } catch {
+      // error silenciado
+    } finally {
+      setIsLoading(false);
+    }
+  }, [page, perPage, serverFilters, sort]);
+
+  useEffect(() => {
+    fetchCursos();
+  }, [fetchCursos]);
+
+  function handleCreate() {
+    setSelected(null);
+    setIsModalOpen(true);
+  }
+
+  function handleEdit(curso: Curso) {
+    setSelected(curso);
+    setIsModalOpen(true);
+  }
+
+  function handleDelete(id: number) {
+    setConfirmId(id);
+  }
+
+  async function handleConfirmDelete() {
+    if (confirmId === null) return;
+    await deleteCurso(confirmId);
+    setConfirmId(null);
+    await fetchCursos();
+  }
+
+  async function handleSubmit(data: CreateCursoRequest | UpdateCursoRequest) {
+    if (selected) {
+      await updateCurso(selected.id, data as UpdateCursoRequest);
+    } else {
+      await createCurso(data as CreateCursoRequest);
+    }
+    setIsModalOpen(false);
+    fetchCursos();
+  }
+
+  function handleServerFilterChange(filters: CursoServerFilters) {
+    setPage(1);
+    setServerFilters(filters);
+  }
+
+  function handleSortChange(newSort: string[]) {
+    setPage(1);
+    setSort(newSort);
+  }
+
+  function handlePageChange(newPage: number) {
+    setPage(newPage);
+  }
+
+  function handlePerPageChange(newPerPage: number) {
+    setPage(1);
+    setPerPage(newPerPage);
+  }
+
+  return (
+    <>
+      <PageMeta title="Cursos" description="Listado de cursos de posgrado" />
+      <PageBreadCrumb pageTitle="Cursos" />
+
+      <div className="space-y-5">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-gray-800 dark:text-white/90">
+            Lista de Cursos
+          </h2>
+
+          {can('cursos.create') && (
+              <Button
+                  size={"sm"}
+                  onClick={handleCreate}
+                  startIcon={<PlusIcon className="size-4 text-white" />}
+              >
+                Nuevo Curso
+              </Button>
+          )}
+
+        </div>
+
+        <CursoTable
+            cursos={cursos}
+            pagination={pagination}
+            isLoading={isLoading}
+
+            nivelAcadMap={nivelAcadMap}
+            periodoDescMap={periodoDescMap}
+            onServerFilterChange={handleServerFilterChange}
+            onPageChange={handlePageChange}
+            onPerPageChange={handlePerPageChange}
+            onSortChange={handleSortChange}
+        />
+      </div>
+
+      <Modal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          className="max-w-md p-6 sm:p-8"
+      >
+        <h3 className="mb-5 text-lg font-semibold text-gray-800 dark:text-white/90">
+          {selected ? "Editar Curso" : "Nuevo Curso"}
+        </h3>
+        <CursoForm
+            curso={selected}
+            onSubmit={handleSubmit}
+            onCancel={() => setIsModalOpen(false)}
+        />
+      </Modal>
+
+      <ModalDelete
+          isOpen={confirmId !== null}
+          onClose={() => setConfirmId(null)}
+          onConfirm={handleConfirmDelete}
+          title="¿Eliminar este curso?"
+          message="Esta acción no se puede deshacer."
+      />
+
+    </>
+  );
+}

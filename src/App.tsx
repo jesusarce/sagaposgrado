@@ -23,7 +23,7 @@ import RolesListPage from "./pages/roles/RolesListPage";
 import PermissionsListPage from "./pages/permissions/PermissionsListPage";
 import MenuItemsListPage from "./pages/menu-items/MenuItemsListPage";
 import UsersListPage from "./pages/users/UsersListPage";
-import CursosListPage from "./pages/posgrado/CursosListPage";
+import CursosListPage from "./pages/posgrado/cursos/CursosListPage.tsx";
 
 export default function App() {
   return (
