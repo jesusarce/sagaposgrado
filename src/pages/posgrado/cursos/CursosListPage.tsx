@@ -3,8 +3,10 @@ import PageBreadCrumb from "../../../components/common/PageBreadCrumb.tsx";
 import PageMeta from "../../../components/common/PageMeta.tsx";
 import CursoTable from "../../../components/posgrado/cursos/CursoTable.tsx";
 import {createCurso, deleteCurso, getCursosPaginated, updateCurso} from "../../../services/postgrado/cursos.service.ts";
-import { getNivelAcadMap } from "../../../services/postgrado/nivel-academico.service.ts";
-import { getPeriodoDescMap } from "../../../services/postgrado/periodos-academicos.service.ts";
+import {getAllNivelesAcademicosMap} from "../../../services/postgrado/nivel-academico.service.ts";
+import {
+  getAllPeriodosAcademicosMap,
+} from "../../../services/postgrado/periodos-academicos.service.ts";
 import type {
   CreateCursoRequest,
   Curso,
@@ -16,7 +18,6 @@ import Button from "../../../components/ui/button/Button.tsx";
 import {PlusIcon} from "../../../icons";
 import {usePermissions} from "../../../hooks/usePermissions.ts";
 import {Modal} from "../../../components/ui/modal";
-import UserForm from "../../../components/users/UserForm.tsx";
 import ModalDelete from "../../../components/modal/ModalDelete.tsx";
 import CursoForm from "../../../components/posgrado/cursos/CursoForm.tsx";
 
@@ -34,12 +35,12 @@ export default function CursosListPage() {
   const [perPage, setPerPage] = useState(50);
   const [serverFilters, setServerFilters] = useState<CursoServerFilters>({});
   const [sort, setSort] = useState<string[]>([]);
-  const [nivelAcadMap, setNivelAcadMap] = useState<Map<string, string>>(new Map());
-  const [periodoDescMap, setPeriodoDescMap] = useState<Map<string, string>>(new Map());
+  const [nivelesAcademicosMap, setNivelesAcademicosMap] = useState<Map<string, string>>(new Map());
+  const [periodosAcademicosMap, setPeriodosAcademicosMap] = useState<Map<string, string>>(new Map());
 
   useEffect(() => {
-    getNivelAcadMap().then(setNivelAcadMap).catch(() => {});
-    getPeriodoDescMap().then(setPeriodoDescMap).catch(() => {});
+    getAllNivelesAcademicosMap().then(setNivelesAcademicosMap).catch(() => {});
+    getAllPeriodosAcademicosMap().then(setPeriodosAcademicosMap).catch(() => {});
   }, []);
 
   const fetchCursos = useCallback(async () => {
@@ -62,6 +63,7 @@ export default function CursosListPage() {
       });
 
       const { data, ...meta } = result;
+      console.log("Cursos", data);
       setCursos(data);
       setPagination(meta);
     } catch {
@@ -152,9 +154,10 @@ export default function CursosListPage() {
             cursos={cursos}
             pagination={pagination}
             isLoading={isLoading}
-
-            nivelAcadMap={nivelAcadMap}
-            periodoDescMap={periodoDescMap}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+            nivelAcadMap={nivelesAcademicosMap}
+            periodoDescMap={periodosAcademicosMap}
             onServerFilterChange={handleServerFilterChange}
             onPageChange={handlePageChange}
             onPerPageChange={handlePerPageChange}
@@ -163,6 +166,7 @@ export default function CursosListPage() {
       </div>
 
       <Modal
+          size={'md'}
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
           className="max-w-md p-6 sm:p-8"

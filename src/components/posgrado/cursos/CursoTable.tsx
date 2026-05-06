@@ -1,37 +1,42 @@
 import { useState, useEffect, useRef } from "react";
-import { AngleUpIcon, AngleDownIcon } from "../../../icons";
+import {AngleUpIcon, AngleDownIcon, PencilIcon, TrashBinIcon} from "../../../icons";
 import type { Curso, CursoServerFilters } from "../../../types/saga/curso.types.ts";
 import type { Pagination } from "../../../types/common/api.types.ts";
+import {usePermissions} from "../../../hooks/usePermissions.ts";
 
 interface CursoTableProps {
   cursos: Curso[];
   pagination: Omit<Pagination<Curso>, "data"> | null;
   isLoading?: boolean;
-  nivelAcadMap: Map<string, string>;
-  periodoDescMap: Map<string, string>;
+  nivelAcadMap?: Map<string, string>;
+  periodoDescMap?: Map<string, string>;
   onServerFilterChange: (filters: CursoServerFilters) => void;
   onPageChange: (page: number) => void;
   onPerPageChange: (perPage: number) => void;
   onSortChange: (sort: string[]) => void;
+  onEdit: (curso: Curso) => void;
+  onDelete: (id: number) => void;
 }
 
 interface AllFilters {
-  unidad_academica: string;
-  gestion: string;
   nivel_academico: string;
-  especialidad: string;
-  descripcion: string;
+  unidad_academica: string;
+  periodo_gestion: string;
+  gestion: string;
+  periodo_academico: string; // semestre
   paralelo: string;
+  especialidad: string;
   curso: string;
 }
 
 const INIT_FILTERS: AllFilters = {
-  unidad_academica: "",
-  gestion: "",
   nivel_academico: "",
-  especialidad: "",
-  descripcion: "",
+  unidad_academica: "",
+  periodo_gestion: "",
+  gestion: "",
+  periodo_academico: "", // semestre
   paralelo: "",
+  especialidad: "",
   curso: "",
 };
 
@@ -47,26 +52,30 @@ const COLUMNS: {
   filterKey: keyof AllFilters;
   placeholder: string;
 }[] = [
+  { label: "Nivel Académico",  sortField: "idNivelAcademico",  filterKey: "nivel_academico",  placeholder: "Filtrar..." },
   { label: "Unidad Académica", sortField: "idUnidadAcademica", filterKey: "unidad_academica", placeholder: "Filtrar..." },
-  { label: "Gestión",          sortField: "Gestion",            filterKey: "gestion",          placeholder: "Año..." },
-  { label: "Nivel Académico",  filterKey: "nivel_academico",    placeholder: "Filtrar..." },
+  { label: "Periodo",          sortField: "periodoGestion", filterKey: "periodo_gestion",        placeholder: "Filtrar..." },
+  { label: "Gestión",          sortField: "gestion",            filterKey: "gestion",          placeholder: "Año..." },
+  { label: "Semestre",         sortField: "periodoAcademico",  filterKey: "periodo_academico",     placeholder: "Filtrar..." },
+  { label: "Paralelo",         sortField: "paralelo",           filterKey: "paralelo",  placeholder: "Filtrar..." },
   { label: "Especialidad",     sortField: "idEspecialidad",     filterKey: "especialidad",     placeholder: "Filtrar..." },
-  { label: "Descripción",      filterKey: "descripcion",        placeholder: "Filtrar..." },
-  { label: "Paralelo",         filterKey: "paralelo",           placeholder: "Filtrar..." },
-  { label: "Curso",            sortField: "Curso",              filterKey: "curso",            placeholder: "Buscar cursos..." },
+  { label: "Curso",            sortField: "curso",              filterKey: "curso",            placeholder: "Buscar cursos..." },
 ];
 
 export default function CursoTable({
   cursos,
   pagination,
   isLoading,
-  nivelAcadMap,
-  periodoDescMap,
   onServerFilterChange,
   onPageChange,
   onPerPageChange,
   onSortChange,
+  onEdit,
+  onDelete,
 }: CursoTableProps) {
+  const { can } = usePermissions();
+  const showActions = can('curso.edit') || can('curso.delete');
+
   const [sortField, setSortField] = useState("");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
   const [filters, setFilters] = useState<AllFilters>(INIT_FILTERS);
@@ -88,26 +97,28 @@ export default function CursoTable({
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
       serverFilterRef.current({
-        Curso:            filters.curso            || undefined,
-        Gestion:          filters.gestion          || undefined,
-        Paralelo:         filters.paralelo         || undefined,
-        UnidadAcademica:  filters.unidad_academica || undefined,
-        Especialidad:     filters.especialidad     || undefined,
         NivelAcademico:   filters.nivel_academico  || undefined,
-        PeriodoAcademico: filters.descripcion      || undefined,
+        UnidadAcademica:  filters.unidad_academica || undefined,
+        PeriodoGestion: filters.periodo_gestion      || undefined,
+        Gestion:          filters.gestion          || undefined,
+        PeriodoAcademico: filters.periodo_academico         || undefined, // semestre
+        Paralelo:         filters.paralelo         || undefined,
+        Especialidad:     filters.especialidad     || undefined,
+        Curso:            filters.curso            || undefined,
       });
     }, 400);
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
   }, [
-    filters.curso,
-    filters.gestion,
-    filters.paralelo,
-    filters.unidad_academica,
-    filters.especialidad,
     filters.nivel_academico,
-    filters.descripcion,
+    filters.unidad_academica,
+    filters.periodo_gestion,
+    filters.gestion,
+    filters.periodo_academico, // semestre
+    filters.paralelo,
+    filters.especialidad,
+    filters.curso,
   ]);
 
   function handleFilterChange(key: keyof AllFilters, value: string) {
@@ -171,6 +182,9 @@ export default function CursoTable({
           <thead>
             {/* Fila de cabeceras con sort */}
             <tr className="border-b border-gray-100 dark:border-white/[0.05]">
+              <th onClick={() => handleSort('id')} className="w-16 px-5 py-3 text-left text-xs font-medium uppercase text-gray-500 dark:text-gray-400 cursor-pointer select-none hover:text-gray-700 dark:hover:text-gray-200">
+                <span className="flex items-center gap-1"># {renderSortIcon('id')}</span>
+              </th>
               {COLUMNS.map((col) => (
                 <th
                   key={col.label}
@@ -186,6 +200,7 @@ export default function CursoTable({
             </tr>
             {/* Fila de filtros */}
             <tr className="border-b border-gray-100 bg-gray-50 dark:border-white/[0.05] dark:bg-white/[0.02]">
+              <td className="px-5 py-2" />
               {COLUMNS.map((col) => (
                 <td key={col.filterKey} className="px-4 py-2">
                   <input
@@ -220,26 +235,56 @@ export default function CursoTable({
               cursos.map((curso) => (
                 <tr key={curso.id} className="hover:bg-gray-50 dark:hover:bg-white/[0.02]">
                   <td className="px-4 py-3 text-sm text-gray-700 dark:text-gray-300">
+                    {curso.id}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-gray-700 dark:text-gray-300">
+                    {curso.especialidad?.nivel_academico?.nivel_acad }
+                    {/*{nivelAcadMap.get(curso.especialidad?.nivel_academico?.nivel_acad ?? "") ?? "-"}*/}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-gray-700 dark:text-gray-300">
                     {curso.unidad_academica?.unidad_academica ?? "-"}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-gray-700 dark:text-gray-300">
+                    { curso.periodo_gestion?.periodo_gestion ?? "-"}
+                    {/*{nivelAcadMap.get(curso.periodo_gestion?.periodo_gestion ?? "") ?? "-"}*/}
                   </td>
                   <td className="px-4 py-3 text-sm font-medium text-gray-800 dark:text-white/90">
                     {curso.gestion}
                   </td>
-                  <td className="px-4 py-3 text-sm text-gray-700 dark:text-gray-300">
-                    {nivelAcadMap.get(curso.especialidad?.id_nivel_acad ?? "") ?? "-"}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-gray-700 dark:text-gray-300">
-                    {curso.especialidad?.especialidad ?? "-"}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-gray-700 dark:text-gray-300">
-                    {periodoDescMap.get(curso.id_periodo_academico ?? curso.periodo) ?? curso.periodo_academico?.descripcion ?? curso.periodo}
+                  <td className="px-4 py-3 text-sm font-medium text-gray-800 dark:text-white/90">
+                    { curso.periodo_academico?.descripcion ?? "-"}
                   </td>
                   <td className="px-4 py-3 text-sm text-gray-700 dark:text-gray-300">
                     {curso.paralelo}
                   </td>
+                  <td className="px-4 py-3 text-sm text-gray-700 dark:text-gray-300">
+                    {curso.especialidad?.especialidad ?? "-"}
+                  </td>
                   <td className="px-4 py-3 text-sm text-gray-800 dark:text-white/90">
                     {curso.curso}
                   </td>
+                  {showActions && <td className="px-5 py-4">
+                    <div className="flex items-center justify-end gap-2">
+                      {can('users.edit') && (
+                          <button
+                              onClick={() => onEdit(curso)}
+                              className="inline-flex items-center justify-center w-8 h-8 rounded-lg border border-gray-200 text-gray-500 hover:border-brand-500 hover:text-brand-500 dark:border-gray-700 dark:text-gray-400"
+                              title="Editar"
+                          >
+                            <PencilIcon className="size-4" />
+                          </button>
+                      )}
+                      {can('users.delete') && (
+                          <button
+                              onClick={() => onDelete(curso.id)}
+                              className="inline-flex items-center justify-center w-8 h-8 rounded-lg border border-gray-200 text-gray-500 hover:border-error-500 hover:text-error-500 dark:border-gray-700 dark:text-gray-400"
+                              title="Eliminar"
+                          >
+                            <TrashBinIcon className="size-4" />
+                          </button>
+                      )}
+                    </div>
+                  </td>}
                 </tr>
               ))
             )}

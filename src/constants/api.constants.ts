@@ -56,6 +56,9 @@ export const API_ENDPOINTS = {
     UNIDAD_ACADEMICA: {
       BASE: "/saga/unidades-academicas",
       BY_ID: (id: number) => `/saga/unidades-academicas/${id}`,
+    },
+    TIPO: {
+      BASE: "/saga/tipos",
     }
   },
 } as const;

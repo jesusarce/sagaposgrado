@@ -40,7 +40,7 @@ export interface Curso {
   especialidad?: EspecialidadRef;
   unidad_academica?: UnidadAcademicaRef;
   periodo_gestion?: PeriodoGestionRef;
-  periodo_academico?: PeriodoAcademicoRef;
+  periodo_academico?: PeriodoAcademicoRef; // semestre
 }
 
 export interface CreateCursoRequest {
@@ -67,11 +67,12 @@ export interface UpdateCursoRequest {
 }
 
 export interface CursoServerFilters {
-  Curso?: string;
-  Gestion?: string;
-  Paralelo?: string;
-  UnidadAcademica?: string;
-  Especialidad?: string;
   NivelAcademico?: string;
-  PeriodoAcademico?: string;
+  UnidadAcademica?: string;
+  PeriodoGestion?: string;
+  Gestion?: string;
+  PeriodoAcademico?: string; // semestre
+  Paralelo?: string;
+  Especialidad?: string;
+  Curso?: string;
 }

@@ -1,13 +1,24 @@
 import { useEffect, useState } from "react";
 import InputField from "../../form/input/InputField.tsx";
 import {CreateCursoRequest, Curso, UpdateCursoRequest} from "../../../types/saga/curso.types.ts";
-import {Especialidad, getAllEspecialidades} from "../../../services/postgrado/especialidades.service.ts";
+import {
+    Especialidad,
+    getAllEspecialidadesIdNivelAcad
+} from "../../../services/postgrado/especialidades.service.ts";
 import {getAllUnidadesAcademicas, UnidadesAcademicas} from "../../../services/postgrado/unidades-academicas.service.ts";
-import {getAllPeriodosAcademicos, PeriodoAcademico} from "../../../services/postgrado/periodos-academicos.service.ts";
-import {getAllPeriodosGestion, PeriodosGestion} from "../../../services/postgrado/periodos-gestion.service.ts";
+import {
+    getAllPeriodosAcademicosIdNivelAcad,
+    PeriodoAcademico
+} from "../../../services/postgrado/periodos-academicos.service.ts";
+import {
+    getAllPeriodosGestionIdNivelAcad,
+    PeriodosGestion
+} from "../../../services/postgrado/periodos-gestion.service.ts";
 import Label from "../../form/Label.tsx";
 import Select from "../../form/Select.tsx";
 import Button from "../../ui/button/Button.tsx";
+import {getAllNivelesAcademicos, NivelAcademico} from "../../../services/postgrado/nivel-academico.service.ts";
+import {getAllTipos, Tipo} from "../../../services/postgrado/tipos.service.ts";
 
 
 interface CursoFormProps {
@@ -21,60 +32,116 @@ export default function CursoForm({
   onSubmit,
   onCancel,
   }: CursoFormProps) {
-    const [nombreCurso, setNombreCurso] = useState("");
-    const [idEspecialidad, setIdEspecialidad] = useState("");
-    const [idUnidadAcademica, setIdUnidadAcademica] = useState("");
-    const [periodo, setPeriodo] = useState("");
     const [gestion, setGestion] = useState("");
-    const [idPeriodoGestion, setIdPeriodoGestion] = useState("");
-    const [paralelo, setParalelo] = useState("");
-    const [tipo, setTipo] = useState("Posgrado");
-
-    const [especialidades, setEspecialidades] = useState<Especialidad[]>([]);
     const [unidades, setUnidades] = useState<UnidadesAcademicas[]>([]);
-    const [periodos, setPeriodos] = useState<PeriodoAcademico[]>([]);
-    const [gestiones, setGestiones] = useState<PeriodosGestion[]>([]);
+    const [periodoGestiones, setPeriodoGestiones] = useState<PeriodosGestion[]>([]);
+    const [especialidades, setEspecialidades] = useState<Especialidad[]>([]);
+    const [periodosAcademicos, setPeriodosAcademicos] = useState<PeriodoAcademico[]>([]);
+
+    const [nivelesAcademidos, setNivelesAcademicos] = useState<NivelAcademico[]>([]);
+    const [tipos, setTipos] = useState<Tipo[]>([]);
+
+    const [nivelAcademido, setNivelAcademido] = useState<string>();
+    const [tipo, setTipo] = useState("");
+    const [paralelo, setParalelo] = useState("");
+
+    const [unidad, setUnidad] = useState("");
+    const [periodoGestion, setPeriodoGestion] = useState("");
+    const [especilidad, setEspecilidad] = useState("");
+    const [detalleCurso, setDetalleCurso] = useState("");
+    const [periodoAcademico, setPeriodoAcademico] = useState("");
 
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         Promise.all([
-            getAllEspecialidades(),
             getAllUnidadesAcademicas(),
-            getAllPeriodosAcademicos(),
-            getAllPeriodosGestion(),
+            getAllNivelesAcademicos(),
+            getAllTipos()
         ])
-            .then(([esp, uni, per, ges]) => {
-                setEspecialidades(esp);
+            .then(([ uni, na, tp]) => {
                 setUnidades(uni);
-                setPeriodos(per);
-                setGestiones(ges);
+                setNivelesAcademicos(na);
+                setTipos(tp);
             })
             .catch(() => {});
     }, []);
 
     useEffect(() => {
-        setNombreCurso(curso?.curso ?? "");
-        setIdEspecialidad(curso?.id_especialidad ?? "");
-        setIdUnidadAcademica(curso?.id_unidad_academica ?? "");
-        setPeriodo(curso?.periodo ?? "");
+        if (!nivelAcademido) {
+            setPeriodoGestiones([]);
+            setPeriodoGestion("");
+
+            setPeriodosAcademicos([]);
+            setPeriodoAcademico("");
+
+            setEspecialidades([]);
+            setEspecilidad("");
+
+            return;
+        }
+
+        const loadData = async () => {
+            try {
+                const [
+                    periodosGestionData,
+                    periodosAcademicosData,
+                    especialidadesData
+                ] = await Promise.all([
+                    getAllPeriodosGestionIdNivelAcad(nivelAcademido),
+                    getAllPeriodosAcademicosIdNivelAcad(nivelAcademido),
+                    getAllEspecialidadesIdNivelAcad(nivelAcademido),
+                ]);
+                console.log('periodosGestion',periodosGestionData);
+                console.log('periodosAcademicos',periodosAcademicosData);
+                console.log('especialidades',especialidadesData);
+
+
+                setPeriodoGestiones(periodosGestionData);
+                setPeriodoGestion("");
+
+                setPeriodosAcademicos(periodosAcademicosData);
+                setPeriodoAcademico("")
+
+                setEspecialidades(especialidadesData);
+                setEspecilidad("");
+
+            } catch (error) {
+                console.error(error);
+                setPeriodoGestiones([]);
+                setPeriodosAcademicos([]);
+                setEspecialidades([]);
+            }
+        };
+
+        loadData();
+
+    }, [nivelAcademido]);
+
+    useEffect(() => {
         setGestion(curso?.gestion ?? "");
-        setIdPeriodoGestion(curso?.id_periodo_gestion ?? "");
+        setUnidad(curso?.id_unidad_academica ?? "");
+        setNivelAcademido(curso?.tipo ?? "");
+        setPeriodoGestion(curso?.id_periodo_gestion ?? "");
+        setEspecilidad(curso?.id_especialidad ?? "");
+
+        setDetalleCurso(curso?.curso ?? "");
+        setPeriodoAcademico(curso?.periodo ?? "");
         setParalelo(curso?.paralelo ?? "");
-        setTipo(curso?.tipo ?? "Posgrado");
+        setTipo(curso?.tipo ?? "");
         setError(null);
     }, [curso]);
 
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
 
-        if (!nombreCurso.trim()) {
+        if (!detalleCurso.trim()) {
             setError("El nombre del curso es requerido");
             return;
         }
 
-        if (!idEspecialidad || !idUnidadAcademica) {
+        if (!especilidad || !unidad) {
             setError("Debe seleccionar Especialidad y Unidad Académica");
             return;
         }
@@ -86,12 +153,12 @@ export default function CursoForm({
             if (curso) {
                 const payload: UpdateCursoRequest = {
                     id: curso.id,
-                    curso: nombreCurso.trim(),
-                    idEspecialidad: Number(idEspecialidad),
-                    idUnidadAcademica: Number(idUnidadAcademica),
-                    periodo: Number(periodo),
+                    curso: detalleCurso.trim(),
+                    idEspecialidad: Number(especilidad),
+                    idUnidadAcademica: Number(unidad),
+                    periodo: Number(periodoAcademico),
                     gestion: Number(gestion),
-                    idPeriodoGestion: Number(idPeriodoGestion),
+                    idPeriodoGestion: Number(periodoGestion),
                     paralelo,
                     tipo,
                 };
@@ -99,12 +166,12 @@ export default function CursoForm({
                 await onSubmit(payload);
             } else {
                 const payload: CreateCursoRequest = {
-                    curso: nombreCurso.trim(),
-                    idEspecialidad: Number(idEspecialidad),
-                    idUnidadAcademica: Number(idUnidadAcademica),
-                    periodo: Number(periodo),
+                    curso: detalleCurso.trim(),
+                    idEspecialidad: Number(especilidad),
+                    idUnidadAcademica: Number(unidad),
+                    periodo: Number(periodoAcademico),
                     gestion: Number(gestion),
-                    idPeriodoGestion: Number(idPeriodoGestion),
+                    idPeriodoGestion: Number(periodoGestion),
                     paralelo,
                     tipo,
                 };
@@ -127,90 +194,94 @@ export default function CursoForm({
 
     return (
         <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Curso */}
-            <div>
-                <Label>
-                    Curso <span className="text-error-500">*</span>
-                </Label>
-                <InputField
-                    value={nombreCurso}
-                    onChange={(e) => setNombreCurso(e.target.value)}
-                    placeholder="Nombre del curso"
-                />
-            </div>
-
-            {/* Especialidad */}
-            <div>
-                <Label>
-                    Especialidad <span className="text-error-500">*</span>
-                </Label>
-                <Select
-                    value={idEspecialidad}
-                    onChange={(e) => setIdEspecialidad(e.target.value)}
-                    options={especialidades.map((item) => ({
-                        value: item.id,
-                        label: item.especialidad,
-                    }))}
-                    placeholder="Seleccione"
-                />
-            </div>
-
-            {/* Unidad Académica */}
-            <div>
-                <Label>
-                    Unidad Académica <span className="text-error-500">*</span>
-                </Label>
-                <Select
-                    value={idUnidadAcademica}
-                    onChange={(e) => setIdUnidadAcademica(e.target.value)}
-                    options={unidades.map((item) => ({
-                        value: item.id,
-                        label: item.unidad_academica,
-                    }))}
-                    placeholder="Seleccione"
-                />
-            </div>
-
-            {/* Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                    <Label>Periodo</Label>
-                    <Select
-                        value={periodo}
-                        onChange={(e) => setPeriodo(e.target.value)}
-                        options={periodos.map((item) => ({
-                            value: item.id,
-                            label: item.descripcion,
-                        }))}
-                        placeholder="Seleccione"
-                    />
-                </div>
-
                 <div>
                     <Label>Gestión</Label>
                     <InputField
                         type="number"
                         value={gestion}
                         onChange={(e) => setGestion(e.target.value)}
-                        placeholder="2025"
+                        placeholder="2026"
                     />
                 </div>
-
                 <div>
-                    <Label>Periodo Gestión</Label>
+                    <Label>
+                        Unidad<span className="text-error-500">*</span>
+                    </Label>
                     <Select
-                        value={idPeriodoGestion}
-                        onChange={(e) =>
-                            setIdPeriodoGestion(e.target.value)
-                        }
-                        options={gestiones.map((item) => ({
+                        onChange={(value) => setUnidad(value)}
+                        options={unidades.map((item) => ({
                             value: item.id,
-                            label: item.nivel_acad,
+                            label: item.unidad_academica,
                         }))}
                         placeholder="Seleccione"
                     />
                 </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <Label>Nivel Academico</Label>
+                    <Select
+                        // value={nivelAcademido}
+                        onChange={(value) => setNivelAcademido(value)}
+                        options={nivelesAcademidos.map((item) => ({
+                            value: item.id,
+                            label: item.nivel_acad
+                        }))}
+                        placeholder="Seleccione"
+                    />
+                </div>
+                <div>
+                    <Label>Periodo Gestión</Label>
+                    <Select
+                        onChange={(value) => setPeriodoGestion(value)}
+                        options={periodoGestiones.map((item) => ({
+                            value: item.id,
+                            label: item.periodo_gestion,
+                        }))}
+                        placeholder="Seleccione"
+                    />
+                </div>
+            </div>
 
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <Label>
+                        Especialidad <span className="text-error-500">*</span>
+                    </Label>
+                    <Select
+                        onChange={(value) => setEspecilidad(value)}
+                        options={especialidades.map((item) => ({
+                            value: item.id,
+                            label: item.especialidad,
+                        }))}
+                        placeholder="Seleccione"
+                    />
+                </div>
+                <div>
+                    <Label>Semestre</Label>
+                    <Select
+                        onChange={(value) => setPeriodoAcademico(value)}
+                        options={periodosAcademicos.map((item) => ({
+                            value: item.id,
+                            label: item.descripcion,
+                        }))}
+                        placeholder="Seleccione"
+                    />
+                </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <Label>Tipo</Label>
+                    <Select
+                        onChange={(value) => setTipo(value)}
+                        options={tipos.map((item) => ({
+                            value: item.id,
+                            label: item.description,
+                        }))}
+                        placeholder="Seleccione"
+                    />
+                </div>
                 <div>
                     <Label>Paralelo</Label>
                     <InputField
@@ -219,21 +290,18 @@ export default function CursoForm({
                         placeholder="A"
                     />
                 </div>
-            </div>
 
-            {/* Tipo */}
+            </div>
             <div>
-                <Label>Tipo</Label>
-                <Select
-                    value={tipo}
-                    onChange={(e) => setTipo(e.target.value)}
-                    options={[
-                        { value: "Posgrado", label: "Posgrado" },
-                        { value: "Pregrado", label: "Pregrado" },
-                    ]}
+                <Label>
+                    Detalle del curso <span className="text-error-500">*</span>
+                </Label>
+                <InputField
+                    value={detalleCurso}
+                    onChange={(e) => setDetalleCurso(e.target.value)}
+                    placeholder="Nombre del curso"
                 />
             </div>
-
             {/* Error */}
             {error && (
                 <p className="text-sm text-error-500">{error}</p>

@@ -20,7 +20,7 @@ export async function getAllUnidadesAcademicas(): Promise<UnidadesAcademicas[]> 
     return data.data;
 }
 
-export async function getUnidadesAcademicasMap(): Promise<Map<string, string>> {
+export async function getAllUnidadesAcademicasMap(): Promise<Map<string, string>> {
     const unidadesAcademicas = await getAllUnidadesAcademicas();
     return new Map(unidadesAcademicas.map((n) => [n.id, n.unidad_academica]));
 }

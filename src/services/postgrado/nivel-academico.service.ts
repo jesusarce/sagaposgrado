@@ -15,7 +15,7 @@ export async function getAllNivelesAcademicos(): Promise<NivelAcademico[]> {
 }
 
 /** Construye un mapa id → nivel_acad para uso en tablas. */
-export async function getNivelAcadMap(): Promise<Map<string, string>> {
+export async function getAllNivelesAcademicosMap(): Promise<Map<string, string>> {
   const niveles = await getAllNivelesAcademicos();
   return new Map(niveles.map((n) => [n.id, n.nivel_acad]));
 }
