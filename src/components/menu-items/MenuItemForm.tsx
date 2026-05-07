@@ -15,6 +15,9 @@ import {
   LockIcon,
   PageIcon,
 } from "../../icons";
+import Checkbox from "../form/input/Checkbox.tsx";
+import Select from "../form/Select.tsx";
+import CheckboxSkeleton from "../animation/CheckboxSkeleton.tsx";
 
 const ICON_OPTIONS: { value: string; label: string; Icon: React.FC<{ className?: string }> }[] = [
   { value: "dashboard", label: "Dashboard", Icon: GridIcon },
@@ -47,11 +50,18 @@ export default function MenuItemForm({ item, allItems = [], onSubmit, onCancel }
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const [loadingRoles, setLoadingRoles] = useState(true);
+
   // Ítems que pueden ser padre: excluye el ítem actual y sus hijos
   const parentOptions = allItems.filter((i) => i.id !== item?.id && i.parent_id !== item?.id);
 
   useEffect(() => {
-    getRoles().then(setAllRoles).catch(() => {});
+    setLoadingRoles(true);
+
+    getRoles()
+        .then((data) => setAllRoles(data))
+        .catch(() => {})
+        .finally(() => setLoadingRoles(false));
   }, []);
 
   useEffect(() => {
@@ -149,39 +159,47 @@ export default function MenuItemForm({ item, allItems = [], onSubmit, onCancel }
       </div>
       <div>
         <Label>Ítem padre</Label>
-        <select
-          value={parentId ?? ""}
-          onChange={(e) => setParentId(e.target.value ? Number(e.target.value) : null)}
-          className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-700 shadow-sm focus:border-brand-500 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300"
-        >
-          <option value="">— Sin padre (ítem raíz) —</option>
-          {parentOptions.map((opt) => (
-            <option key={opt.id} value={opt.id}>
-              {opt.parent_id ? `↳ ${opt.label}` : opt.label}
-            </option>
-          ))}
-        </select>
+        <Select
+            defaultValue={parentId ? String(parentId) : ""}
+            placeholder="— Sin padre (ítem raíz) —"
+            onChange={(value) =>
+                setParentId(value ? Number(value) : null)
+            }
+            options={parentOptions.map((opt) => ({
+              value: String(opt.id),
+              label: opt.parent_id
+                  ? `↳ ${opt.label}`
+                  : opt.label,
+            }))}
+        />
       </div>
 
       {/* Roles */}
-      {allRoles.length > 0 && (
-        <div>
+      <div>
           <Label>Roles que pueden ver este ítem</Label>
           <div className="mt-2 flex flex-wrap gap-x-4 gap-y-2 rounded-lg border border-gray-200 px-4 py-3 dark:border-gray-700">
-            {allRoles.map((role) => (
-              <label key={role.id} className="flex cursor-pointer items-center gap-1.5 text-sm text-gray-700 dark:text-gray-300">
-                <input
-                  type="checkbox"
-                  checked={selectedRoleIds.includes(role.id)}
-                  onChange={() => toggleRole(role.id)}
-                  className="rounded border-gray-300 text-brand-500 focus:ring-brand-500"
-                />
-                {role.name}
-              </label>
-            ))}
+            {loadingRoles ? (
+                <CheckboxSkeleton items={3} />
+            ) : allRoles.length === 0 ? (
+              <div className="px-5 py-10 text-center text-sm text-gray-400">
+                No hay roles registrados
+              </div>
+            ) : (
+                <div className="flex flex-wrap gap-x-4 gap-y-2">
+                  {allRoles.map((role) => (
+                      <Checkbox
+                          key={role.id}
+                          label={role.name}
+                          checked={selectedRoleIds.includes(role.id)}
+                          onChange={() => toggleRole(role.id)}
+                          size="md"
+                      />
+                  ))}
+                </div>
+            )}
           </div>
-        </div>
-      )}
+      </div>
+
 
       <div className="flex items-center gap-3">
         <input

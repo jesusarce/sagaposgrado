@@ -59,7 +59,7 @@ const Select: React.FC<SelectProps> = ({
       ${disabled ? "opacity-60 cursor-not-allowed" : ""}
       ${className}`}
       >
-        <option value="" disabled>
+        <option value="" disabled hidden>
           {placeholder}
         </option>
 

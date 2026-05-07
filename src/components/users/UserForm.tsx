@@ -6,6 +6,7 @@ import Label from "../form/Label";
 import InputField from "../form/input/InputField";
 import Checkbox from "../form/input/Checkbox.tsx";
 import Button from "../ui/button/Button.tsx";
+import CheckboxSkeleton from "../animation/CheckboxSkeleton.tsx";
 
 interface UserFormProps {
   user?: User | null;
@@ -23,8 +24,15 @@ export default function UserForm({ user, onSubmit, onCancel }: UserFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const [loadingRoles, setLoadingRoles] = useState(true);
+
   useEffect(() => {
-    getRoles().then(setAllRoles).catch(() => {});
+    setLoadingRoles(true);
+
+    getRoles()
+        .then((data) => setAllRoles(data))
+        .catch(() => {})
+        .finally(() => setLoadingRoles(false));
   }, []);
 
   useEffect(() => {
@@ -109,23 +117,33 @@ export default function UserForm({ user, onSubmit, onCancel }: UserFormProps) {
         <Label>Confirmar contraseña</Label>
         <InputField type="password" value={passwordConfirmation} onChange={(e) => setPasswordConfirmation(e.target.value)} placeholder="••••••••" />
       </div>
-      {allRoles.length > 0 && (
+
           <div>
             <Label>Roles</Label>
 
-            <div className="mt-2 flex flex-wrap gap-4">
-              {allRoles.map((role) => (
-                  <Checkbox
-                      key={role.id}
-                      label={role.name}
-                      checked={selectedRoleIds.includes(role.id)}
-                      onChange={() => toggleRole(role.id)}
-                      size="md"
-                  />
-              ))}
+            <div className="mt-2 flex flex-wrap gap-x-4 gap-y-2 rounded-lg border border-gray-200 px-4 py-3 dark:border-gray-700">
+              {loadingRoles ? (
+                  <CheckboxSkeleton items={3} />
+              ) : allRoles.length === 0 ? (
+                  <div className="px-5 py-10 text-center text-sm text-gray-400">
+                    No hay roles registrados
+                  </div>
+              ) : (
+                  <div className="flex flex-wrap gap-x-4 gap-y-2">
+                    {allRoles.map((role) => (
+                        <Checkbox
+                            key={role.id}
+                            label={role.name}
+                            checked={selectedRoleIds.includes(role.id)}
+                            onChange={() => toggleRole(role.id)}
+                            size="md"
+                        />
+                    ))}
+                  </div>
+              )}
             </div>
           </div>
-      )}
+
       {error && <p className="text-sm text-error-500">{error}</p>}
       <div className="flex items-center justify-end gap-3 pt-2">
         <Button

@@ -4,6 +4,8 @@ import type { Permission } from "../../types/permissions/permission.types";
 import { getPermissions } from "../../services/permissions.service";
 import Label from "../form/Label";
 import InputField from "../form/input/InputField";
+import Checkbox from "../form/input/Checkbox.tsx";
+import CheckboxSkeleton from "../animation/CheckboxSkeleton.tsx";
 
 interface RoleFormProps {
   role?: Role | null;
@@ -18,8 +20,15 @@ export default function RoleForm({ role, onSubmit, onCancel }: RoleFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const [groupLoading, setGroupLoading] = useState<boolean>(true);
+
   useEffect(() => {
-    getPermissions().then(setAllPermissions).catch(() => {});
+    setGroupLoading(true);
+
+    getPermissions()
+        .then((data) => setAllPermissions(data))
+        .catch(() => {})
+        .finally(() => setGroupLoading(false));
   }, []);
 
   useEffect(() => {
@@ -97,50 +106,60 @@ export default function RoleForm({ role, onSubmit, onCancel }: RoleFormProps) {
           placeholder="Ej: Administrador"
         />
       </div>
-
-      {grouped.length > 0 && (
         <div>
           <Label>Permisos</Label>
-          <div className="mt-2 max-h-72 overflow-y-auto rounded-lg border border-gray-200 dark:border-gray-700">
-            {grouped.map(([group, perms]) => {
-              const groupIds = perms.map((p) => p.id);
-              const allChecked = groupIds.every((id) => selectedIds.includes(id));
-              const someChecked = groupIds.some((id) => selectedIds.includes(id));
-              return (
-                <div key={group} className="border-b border-gray-100 last:border-0 dark:border-gray-700/50">
-                  <button
-                    type="button"
-                    onClick={() => toggleGroup(perms)}
-                    className="flex w-full items-center gap-2 bg-gray-50 px-4 py-2 text-left text-xs font-semibold uppercase tracking-wide text-gray-600 hover:bg-gray-100 dark:bg-white/[0.02] dark:text-gray-400 dark:hover:bg-white/[0.04]"
-                  >
-                    <span className={`inline-flex h-4 w-4 items-center justify-center rounded border text-white transition-colors ${allChecked ? "border-brand-500 bg-brand-500" : someChecked ? "border-brand-400 bg-brand-200" : "border-gray-300 bg-white dark:border-gray-600 dark:bg-gray-800"}`}>
-                      {allChecked && (
-                        <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                        </svg>
-                      )}
-                    </span>
-                    {group}
-                  </button>
-                  <div className="flex flex-wrap gap-x-4 gap-y-1 px-4 py-2">
-                    {perms.map((perm) => (
-                      <label key={perm.id} className="flex cursor-pointer items-center gap-1.5 text-sm text-gray-700 dark:text-gray-300">
-                        <input
-                          type="checkbox"
-                          checked={selectedIds.includes(perm.id)}
-                          onChange={() => togglePermission(perm.id)}
-                          className="rounded border-gray-300 text-brand-500 focus:ring-brand-500"
-                        />
-                        {perm.name.split(".").pop()}
-                      </label>
-                    ))}
-                  </div>
+          <div className="mt-2 rounded-lg border border-gray-200 dark:border-gray-700">
+            {groupLoading ? (
+                <div className="px-4 py-4">
+                  <CheckboxSkeleton items={12} />
                 </div>
-              );
-            })}
+            ) : grouped.length === 0 ? (
+                <div className="px-5 py-10 text-center text-sm text-gray-400">
+                  No hay permisos registrados
+                </div>
+            ) : (
+                <div>
+                  {grouped.map(([group, perms]) => {
+                    const groupIds = perms.map((p) => p.id);
+                    const allChecked = groupIds.every((id) => selectedIds.includes(id));
+                    const someChecked = groupIds.some((id) => selectedIds.includes(id));
+                    return (
+                        <div key={group} className="border-b border-gray-100 last:border-0 dark:border-gray-700/50">
+                          <button
+                              type="button"
+                              onClick={() => toggleGroup(perms)}
+                              className="flex w-full items-center gap-2 bg-gray-50 px-4 py-2 text-left text-xs font-semibold uppercase tracking-wide text-gray-600 hover:bg-gray-100 dark:bg-white/[0.02] dark:text-gray-400 dark:hover:bg-white/[0.04]"
+                          >
+                            <Checkbox
+                                checked={allChecked}
+                                onChange={() => toggleGroup(perms)}
+                                className={
+                                  !allChecked && someChecked
+                                      ? "border-brand-400 bg-brand-200 dark:bg-brand-500/30"
+                                      : ""
+                                }
+                            />
+                            {group}
+                          </button>
+                          <div className="flex flex-wrap gap-x-4 gap-y-1 px-4 py-2">
+                            {perms.map((perm) => (
+                                <Checkbox
+                                    key={perm.id}
+                                    label={perm.name.split(".").pop()}
+                                    checked={selectedIds.includes(perm.id)}
+                                    onChange={() => togglePermission(perm.id)}
+                                    size="sm"
+                                />
+                            ))}
+                          </div>
+                        </div>
+                    );
+                  })}
+                </div>
+            )}
           </div>
         </div>
-      )}
+
 
       {error && <p className="text-sm text-error-500">{error}</p>}
 

@@ -7,9 +7,17 @@ export default function PrivateRoute() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="w-10 h-10 border-4 border-brand-500 border-t-transparent rounded-full animate-spin" />
-      </div>
+        <div className="flex min-h-screen flex-col items-center justify-center bg-gray-50 dark:bg-[#0f172a]">
+          <img
+              src="/images/logo_emi/emi_icono.png"
+              className="h-20 w-auto animate-pulse "
+           alt="logo_emi" />
+
+          <p className="mt-5 text-sm text-gray-500 dark:text-gray-400">
+            Cargando...
+          </p>
+          {/*<div className="mt-5 w-10 h-10 border-4 border-brand-500 border-t-transparent rounded-full animate-spin" />*/}
+        </div>
     );
   }
 

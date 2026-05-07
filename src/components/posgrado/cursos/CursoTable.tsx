@@ -198,6 +198,7 @@ export default function CursoTable({
                   </span>
                 </th>
               ))}
+              {showActions && <th className="w-28 px-5 py-3 text-right text-xs font-medium uppercase text-gray-500 dark:text-gray-400">Acciones</th>}
             </tr>
             {/* Fila de filtros */}
             <tr className="border-b border-gray-100 bg-gray-50 dark:border-white/[0.05] dark:bg-white/[0.02]">
@@ -236,14 +237,12 @@ export default function CursoTable({
                   </td>
                   <td className="px-4 py-3 text-sm text-gray-700 dark:text-gray-300">
                     {curso.especialidad?.nivel_academico?.nivel_acad }
-                    {/*{nivelAcadMap.get(curso.especialidad?.nivel_academico?.nivel_acad ?? "") ?? "-"}*/}
                   </td>
                   <td className="px-4 py-3 text-sm text-gray-700 dark:text-gray-300">
                     {curso.unidad_academica?.unidad_academica ?? "-"}
                   </td>
                   <td className="px-4 py-3 text-sm text-gray-700 dark:text-gray-300">
                     { curso.periodo_gestion?.periodo_gestion ?? "-"}
-                    {/*{nivelAcadMap.get(curso.periodo_gestion?.periodo_gestion ?? "") ?? "-"}*/}
                   </td>
                   <td className="px-4 py-3 text-sm font-medium text-gray-800 dark:text-white/90">
                     {curso.gestion}
