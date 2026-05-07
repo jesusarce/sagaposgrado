@@ -3,6 +3,7 @@ import { PencilIcon, TrashBinIcon, AngleUpIcon, AngleDownIcon } from "../../icon
 import type { Role, RoleFilters } from "../../types/roles/role.types";
 import { usePermissions } from "../../hooks/usePermissions";
 import type { Pagination } from "../../types/common/api.types";
+import TableSkeleton from "../animation/TableSkeleton.tsx";
 
 interface RoleTableProps {
   roles: Role[];
@@ -150,13 +151,9 @@ export default function RoleTable({
             </tr>
           </thead>
           <tbody className={`divide-y divide-gray-100 dark:divide-white/[0.05] transition-opacity duration-200 ${isLoading ? "opacity-50 pointer-events-none" : ""}`}>
-            {isLoading && roles.length === 0 ? (
-              <tr>
-                <td colSpan={showActions ? 5 : 4} className="px-5 py-10 text-center text-sm text-gray-400">
-                  Cargando...
-                </td>
-              </tr>
-            ) : roles.length === 0 ? (
+          {isLoading && roles.length === 0 ? (
+                  <TableSkeleton rows={8} cols={showActions ? 5 : 4} />
+          ) : roles.length === 0 ? (
               <tr>
                 <td colSpan={showActions ? 5 : 4} className="px-5 py-10 text-center text-sm text-gray-400">
                   No hay roles registrados

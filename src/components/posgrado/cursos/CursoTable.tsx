@@ -3,6 +3,7 @@ import {AngleUpIcon, AngleDownIcon, PencilIcon, TrashBinIcon} from "../../../ico
 import type { Curso, CursoServerFilters } from "../../../types/saga/curso.types.ts";
 import type { Pagination } from "../../../types/common/api.types.ts";
 import {usePermissions} from "../../../hooks/usePermissions.ts";
+import TableSkeleton from "../../animation/TableSkeleton.tsx";
 
 interface CursoTableProps {
   cursos: Curso[];
@@ -219,13 +220,9 @@ export default function CursoTable({
               isLoading ? "opacity-50 pointer-events-none" : ""
             }`}
           >
-            {isLoading && cursos.length === 0 ? (
-              <tr>
-                <td colSpan={7} className="px-4 py-10 text-center text-sm text-gray-400">
-                  Cargando...
-                </td>
-              </tr>
-            ) : cursos.length === 0 ? (
+          {isLoading && cursos.length === 0 ? (
+              <TableSkeleton rows={8} cols={10} />
+          ) : cursos.length === 0 ? (
               <tr>
                 <td colSpan={7} className="px-4 py-10 text-center text-sm text-gray-400">
                   No se encontraron cursos

@@ -54,18 +54,31 @@ export default function CursoForm({
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
+    const [isLoadingNivelData, setIsLoadingNivelData] = useState(false);
+    const [isLoadingInitialData, setIsLoadingInitialData] = useState(true);
+
     useEffect(() => {
-        Promise.all([
-            getAllUnidadesAcademicas(),
-            getAllNivelesAcademicos(),
-            getAllTipos()
-        ])
-            .then(([ uni, na, tp]) => {
+        const loadInitialData = async () => {
+            setIsLoadingInitialData(true);
+
+            try {
+                const [uni, na, tp] = await Promise.all([
+                    getAllUnidadesAcademicas(),
+                    getAllNivelesAcademicos(),
+                    getAllTipos(),
+                ]);
+
                 setUnidades(uni);
                 setNivelesAcademicos(na);
                 setTipos(tp);
-            })
-            .catch(() => {});
+            } catch (error) {
+                console.error(error);
+            } finally {
+                setIsLoadingInitialData(false);
+            }
+        };
+
+        loadInitialData();
     }, []);
 
     useEffect(() => {
@@ -83,40 +96,36 @@ export default function CursoForm({
         }
 
         const loadData = async () => {
+            setIsLoadingNivelData(true);
+
             try {
                 const [
                     periodosGestionData,
                     periodosAcademicosData,
-                    especialidadesData
+                    especialidadesData,
                 ] = await Promise.all([
                     getAllPeriodosGestionIdNivelAcad(nivelAcademido),
                     getAllPeriodosAcademicosIdNivelAcad(nivelAcademido),
                     getAllEspecialidadesIdNivelAcad(nivelAcademido),
                 ]);
-                console.log('periodosGestion',periodosGestionData);
-                console.log('periodosAcademicos',periodosAcademicosData);
-                console.log('especialidades',especialidadesData);
-
 
                 setPeriodoGestiones(periodosGestionData);
-                setPeriodoGestion("");
-
                 setPeriodosAcademicos(periodosAcademicosData);
-                setPeriodoAcademico("")
-
                 setEspecialidades(especialidadesData);
-                setEspecilidad("");
 
+                setPeriodoGestion("");
+                setPeriodoAcademico("");
+                setEspecilidad("");
             } catch (error) {
-                console.error(error);
                 setPeriodoGestiones([]);
                 setPeriodosAcademicos([]);
                 setEspecialidades([]);
+            } finally {
+                setIsLoadingNivelData(false);
             }
         };
 
         loadData();
-
     }, [nivelAcademido]);
 
     useEffect(() => {
@@ -209,6 +218,7 @@ export default function CursoForm({
                         Unidad<span className="text-error-500">*</span>
                     </Label>
                     <Select
+                        loading={isLoadingInitialData}
                         onChange={(value) => setUnidad(value)}
                         options={unidades.map((item) => ({
                             value: item.id,
@@ -222,7 +232,7 @@ export default function CursoForm({
                 <div>
                     <Label>Nivel Academico</Label>
                     <Select
-                        // value={nivelAcademido}
+                        loading={isLoadingInitialData}
                         onChange={(value) => setNivelAcademido(value)}
                         options={nivelesAcademidos.map((item) => ({
                             value: item.id,
@@ -234,6 +244,7 @@ export default function CursoForm({
                 <div>
                     <Label>Periodo Gestión</Label>
                     <Select
+                        loading={isLoadingNivelData}
                         onChange={(value) => setPeriodoGestion(value)}
                         options={periodoGestiones.map((item) => ({
                             value: item.id,
@@ -250,6 +261,7 @@ export default function CursoForm({
                         Especialidad <span className="text-error-500">*</span>
                     </Label>
                     <Select
+                        loading={isLoadingNivelData}
                         onChange={(value) => setEspecilidad(value)}
                         options={especialidades.map((item) => ({
                             value: item.id,
@@ -261,6 +273,7 @@ export default function CursoForm({
                 <div>
                     <Label>Semestre</Label>
                     <Select
+                        loading={isLoadingNivelData}
                         onChange={(value) => setPeriodoAcademico(value)}
                         options={periodosAcademicos.map((item) => ({
                             value: item.id,
@@ -274,6 +287,7 @@ export default function CursoForm({
                 <div>
                     <Label>Tipo</Label>
                     <Select
+                        loading={isLoadingInitialData}
                         onChange={(value) => setTipo(value)}
                         options={tipos.map((item) => ({
                             value: item.id,
@@ -318,7 +332,7 @@ export default function CursoForm({
                     Cancelar
                 </Button>
 
-                <Button type="submit" disabled={isSubmitting}>
+                <Button type="submit" disabled={isSubmitting || isLoadingInitialData || isLoadingNivelData} >
                     {isSubmitting
                         ? "Guardando..."
                         : curso

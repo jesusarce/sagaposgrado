@@ -102,11 +102,8 @@ export default function MenuItemsListPage() {
           )}
         </div>
 
-        {isLoading ? (
-          <div className="py-10 text-center text-sm text-gray-400">Cargando...</div>
-        ) : (
-          <MenuItemTable menuItems={menuItems} isLoading={isLoading} onEdit={handleEdit} onDelete={handleDelete} />
-        )}
+        <MenuItemTable menuItems={menuItems} isLoading={isLoading} onEdit={handleEdit} onDelete={handleDelete} />
+
       </div>
 
       <Modal

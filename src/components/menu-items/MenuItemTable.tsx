@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import { PencilIcon, TrashBinIcon, AngleUpIcon, AngleDownIcon } from "../../icons";
 import type { MenuItem } from "../../types/menu-items/menu-item.types";
 import { usePermissions } from "../../hooks/usePermissions";
+import TableSkeleton from "../animation/TableSkeleton.tsx";
 
 interface MenuItemTableProps {
   menuItems: MenuItem[];
@@ -157,11 +158,9 @@ export default function MenuItemTable({
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
-            {isLoading ? (
-              <tr>
-                <td colSpan={showActions ? 7 : 6} className="px-5 py-10 text-center text-sm text-gray-400">Cargando...</td>
-              </tr>
-            ) : paged.length === 0 ? (
+          {isLoading && paged.length === 0 ? (
+                  <TableSkeleton rows={8} cols={showActions ? 7 : 6} />
+          ) : paged.length === 0 ? (
               <tr>
                 <td colSpan={showActions ? 7 : 6} className="px-5 py-10 text-center text-sm text-gray-400">
                   No hay ítems de menú registrados
@@ -216,34 +215,36 @@ export default function MenuItemTable({
         </table>
       </div>
 
-      <div className="flex flex-wrap items-center justify-between gap-3 border-t border-gray-100 px-5 py-3 dark:border-white/[0.05]">
-        <div className="flex items-center gap-3 text-sm text-gray-500 dark:text-gray-400">
-          <span>Filas por página:</span>
-          <select
-            value={perPage}
-            onChange={handlePerPageChange}
-            className="rounded-md border border-gray-200 bg-white px-2 py-1 text-sm text-gray-700 focus:border-brand-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300"
-          >
-            {PER_PAGE_OPTIONS.map((n) => (
-              <option key={n} value={n}>{n}</option>
-            ))}
-          </select>
-          <span>{from}–{to} de {total}</span>
-        </div>
-        <div className="flex items-center gap-1">
-          <button onClick={() => setPage(1)} disabled={safePage === 1} className={btnNormal} title="Primera">«</button>
-          <button onClick={() => setPage(safePage - 1)} disabled={safePage === 1} className={btnNormal} title="Anterior">‹</button>
-          {renderPageNumbers().map((p, i) =>
-            p === "..." ? (
-              <span key={`e-${i}`} className="inline-flex h-8 w-8 items-center justify-center text-sm text-gray-400">…</span>
-            ) : (
-              <button key={p} onClick={() => setPage(p as number)} className={p === safePage ? btnActive : btnNormal}>{p}</button>
-            )
-          )}
-          <button onClick={() => setPage(safePage + 1)} disabled={safePage === totalPages} className={btnNormal} title="Siguiente">›</button>
-          <button onClick={() => setPage(totalPages)} disabled={safePage === totalPages} className={btnNormal} title="Última">»</button>
-        </div>
-      </div>
+      { !isLoading && (
+          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-gray-100 px-5 py-3 dark:border-white/[0.05]">
+            <div className="flex items-center gap-3 text-sm text-gray-500 dark:text-gray-400">
+              <span>Filas por página:</span>
+              <select
+                  value={perPage}
+                  onChange={handlePerPageChange}
+                  className="rounded-md border border-gray-200 bg-white px-2 py-1 text-sm text-gray-700 focus:border-brand-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300"
+              >
+                {PER_PAGE_OPTIONS.map((n) => (
+                    <option key={n} value={n}>{n}</option>
+                ))}
+              </select>
+              <span>{from}–{to} de {total}</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <button onClick={() => setPage(1)} disabled={safePage === 1} className={btnNormal} title="Primera">«</button>
+              <button onClick={() => setPage(safePage - 1)} disabled={safePage === 1} className={btnNormal} title="Anterior">‹</button>
+              {renderPageNumbers().map((p, i) =>
+                  p === "..." ? (
+                      <span key={`e-${i}`} className="inline-flex h-8 w-8 items-center justify-center text-sm text-gray-400">…</span>
+                  ) : (
+                      <button key={p} onClick={() => setPage(p as number)} className={p === safePage ? btnActive : btnNormal}>{p}</button>
+                  )
+              )}
+              <button onClick={() => setPage(safePage + 1)} disabled={safePage === totalPages} className={btnNormal} title="Siguiente">›</button>
+              <button onClick={() => setPage(totalPages)} disabled={safePage === totalPages} className={btnNormal} title="Última">»</button>
+            </div>
+          </div>
+      )}
     </div>
   );
 }
