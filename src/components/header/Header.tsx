@@ -80,13 +80,13 @@ const Header: React.FC<HeaderProps> = ({ onClick, onToggle }) => {
 
           <Link to="/" className="lg:hidden">
             <img
-              className="dark:hidden"
-              src="./images/logo/logo.svg"
+              className="h-8 w-auto dark:hidden"
+              src="/images/logo_emi/emi_icono.png"
               alt="Logo"
             />
             <img
-              className="hidden dark:block"
-              src="./images/logo/logo-dark.svg"
+              className="hidden h-8 w-auto dark:block"
+              src="/images/logo_emi/emi_icono.png"
               alt="Logo"
             />
           </Link>

@@ -41,7 +41,7 @@ const INIT_FILTERS: AllFilters = {
   curso: "",
 };
 
-const PER_PAGE_OPTIONS = [25, 50, 100];
+const PER_PAGE_OPTIONS = [10, 25, 50, 100];
 
 const inputCls =
   "w-full rounded-md border border-gray-200 bg-white px-3 py-1.5 text-xs text-gray-700 placeholder-gray-400 focus:border-brand-400 focus:outline-none dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300";

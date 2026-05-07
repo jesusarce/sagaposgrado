@@ -20,6 +20,11 @@ import {usePermissions} from "../../../hooks/usePermissions.ts";
 import {Modal} from "../../../components/ui/modal";
 import ModalDelete from "../../../components/modal/ModalDelete.tsx";
 import CursoForm from "../../../components/posgrado/cursos/CursoForm.tsx";
+import DocenteTable from "../../../components/posgrado/docentes/DocenteTable.tsx";
+import MateriaTable from "../../../components/posgrado/materias/MateriaTable.tsx";
+import {getAllMaterias, Materia} from "../../../services/postgrado/materias.service.ts";
+import {Docente, getAllDocentes} from "../../../services/postgrado/docentes.service.ts";
+import Tabs from "../../../components/tabs/Tabs.tsx";
 
 export default function CursosListPage() {
 
@@ -32,11 +37,72 @@ export default function CursosListPage() {
   const [pagination, setPagination] = useState<Omit<Pagination<Curso>, "data"> | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [page, setPage] = useState(1);
-  const [perPage, setPerPage] = useState(50);
+  const [perPage, setPerPage] = useState(10);
   const [serverFilters, setServerFilters] = useState<CursoServerFilters>({});
   const [sort, setSort] = useState<string[]>([]);
   const [nivelesAcademicosMap, setNivelesAcademicosMap] = useState<Map<string, string>>(new Map());
   const [periodosAcademicosMap, setPeriodosAcademicosMap] = useState<Map<string, string>>(new Map());
+
+  const [docentes, setDocentes] = useState<Docente[]>([]);
+  const [materias, setMaterias] = useState<Materia[]>([]);
+  const [isLoadingTablas, setIsLoadingTablas] = useState<boolean>(false);
+
+  const tabs = [
+    {
+      id: "formularioCurso",
+      label: "Formulario curso",
+      content: (
+          <>
+            <CursoForm
+                curso={selected}
+                onSubmit={handleSubmit}
+                onCancel={() => setIsModalOpen(false)}
+            />
+            <div className="py-4">
+              <h3 className="mb-5 text-lg font-semibold text-gray-800 dark:text-white/90">
+                {"Asignación de docentes"}
+              </h3>
+              <DocenteTable docentes={docentes} isLoading={isLoadingTablas} />
+            </div>
+          </>
+      ),
+    },
+    {
+      id: "mateiasCurso",
+      label: "Materias del curso",
+      content: (
+          <>
+            <MateriaTable materias={materias} isLoading={isLoadingTablas} />
+          </>
+      ),
+    },
+    {
+      id: "alumnos",
+      label: "Alumnos",
+      title: "Alumnos",
+      content: (<p>En proceso...</p>),
+    },
+    {
+      id: "alumnosDeshabilitados",
+      label: "Alumnos deshabilitados",
+      title: "Alumnos deshabilitados",
+      content: (
+          <p>
+            En proceso...
+          </p>
+      ),
+    },
+    {
+      id: "disciplina",
+      label: "Disciplina",
+      title: "Disciplina",
+      content: (
+          <p>
+            En proceso...
+          </p>
+      ),
+    },
+  ];
 
   useEffect(() => {
     getAllNivelesAcademicosMap().then(setNivelesAcademicosMap).catch(() => {});
@@ -127,6 +193,26 @@ export default function CursosListPage() {
     setPerPage(newPerPage);
   }
 
+  useEffect(() => {
+    setIsLoadingTablas(true);
+    async function getAll() {
+      try {
+        const [docentesData, materiasData] =
+            await Promise.all([
+              getAllDocentes(),
+              getAllMaterias(),
+            ]);
+        setDocentes(docentesData);
+        setMaterias(materiasData);
+      } catch (error) {
+        console.log(error);
+        setDocentes([]);
+        setMaterias([]);
+      } finally { setIsLoadingTablas(false); }
+    }
+    getAll();
+  }, []);
+
   return (
     <>
       <PageMeta title="Cursos" description="Listado de cursos de posgrado" />
@@ -166,7 +252,7 @@ export default function CursosListPage() {
       </div>
 
       <Modal
-          size={'md'}
+          size={'lg'}
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
           className="max-w-md p-6 sm:p-8"
@@ -174,11 +260,9 @@ export default function CursosListPage() {
         <h3 className="mb-5 text-lg font-semibold text-gray-800 dark:text-white/90">
           {selected ? "Editar Curso" : "Nuevo Curso"}
         </h3>
-        <CursoForm
-            curso={selected}
-            onSubmit={handleSubmit}
-            onCancel={() => setIsModalOpen(false)}
-        />
+
+        <Tabs tabs={tabs} />
+
       </Modal>
 
       <ModalDelete

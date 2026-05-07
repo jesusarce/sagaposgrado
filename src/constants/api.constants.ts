@@ -59,6 +59,12 @@ export const API_ENDPOINTS = {
     },
     TIPO: {
       BASE: "/saga/tipos",
-    }
+    },
+    DOCENTE: {
+      BASE: "/saga/docentes",
+    },
+    MATERIA: {
+      BASE: "/saga/materias",
+    },
   },
 } as const;

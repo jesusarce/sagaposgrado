@@ -20,7 +20,8 @@ export default defineConfig({
     proxy: {
       "/api-v1": {
         // target: "https://sagaposgradobackend.emi.edu.bo",
-        target: "http://localhost:8000",
+        // target: "http://localhost:8000",
+        target: "http://192.168.140.12:8000",
         changeOrigin: true,
       },
     },
